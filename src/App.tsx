@@ -1,9 +1,6 @@
+import MyMap from "./components/map-components";
 const App = () => {
-  return (
-    <div>
-      <h1 className="bg-red-500">FFFFF</h1>
-    </div>
-  );
+  return <MyMap />;
 };
 
 export default App;
