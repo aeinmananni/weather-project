@@ -1,43 +1,52 @@
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import LocationComponent from "../location-component";
+import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
-import "ol/ol.css";
-import { Map, View } from "ol";
-import TileLayer from "ol/layer/Tile";
-import OSM from "ol/source/OSM";
+import { Map, LatLngTuple, LeafletEvent } from "leaflet";
+// import L from "leaflet";
 
-const MyMap: React.FC = () => {
-  const mapRef = useRef<HTMLDivElement | null>(null);
-  const [coordinates, setCoordinates] = useState<{
-    lon: number;
-    lat: number;
-  } | null>({
-    lon: 5912614.022351064,
-    lat: 3928535.049189016,
-  });
+// L.Icon.Default.mergeOptions({
+//   iconRetinaUrl: import("leaflet/dist/images/marker-icon-2x.png"),
+//   iconUrl: import("leaflet/dist/images/marker-icon.png"),
+//   shadowUrl: import("leaflet/dist/images/marker-shadow.png"),
+// });
+const MapExample = () => {
+  const [location, setLocation] = useState<LatLngTuple>([35.6892, 51.389]);
+  const [zoom, setZoom] = useState<number>(13);
+  const mapRef = useRef<Map>(null);
+
   useEffect(() => {
-    if (!mapRef.current) return;
-
-    const map = new Map({
-      target: mapRef.current,
-      layers: [
-        new TileLayer({
-          source: new OSM(),
-        }),
-      ],
-      view: new View({
-        center: [coordinates?.lon ?? 0, coordinates?.lat ?? 0],
-        zoom: 5,
-      }),
-    });
-
-    map.on("click", (event) => {
-      const [lon, lat] = event.coordinate;
-      setCoordinates({ lon, lat });
-    });
-
-    return () => map.setTarget(undefined);
-  }, []);
-  console.log("LON : ", coordinates?.lon, "LAT : ", coordinates?.lat);
-  return <div ref={mapRef} style={{ width: "100%", height: "500px" }} />;
+    if (mapRef.current) {
+      mapRef.current.setView(location, zoom); // تنظیم مرکز جدید و زوم نقشه
+    }
+  }, [location]);
+  return (
+    <div className="relative">
+      <MapContainer
+        center={location}
+        zoom={13}
+        style={{ height: "400px", width: "100%" }}
+        whenReady={(event: LeafletEvent) => {
+          return (mapRef.current = event.target as Map);
+        }}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+        />
+        <Marker position={location}>
+          <Popup>موقعیت تهران</Popup>
+        </Marker>
+      </MapContainer>
+      <LocationComponent
+        className="right-0"
+        onChange={(e) => {
+          setLocation([e.lat, e.lon]);
+          setZoom(27);
+        }}
+      />
+    </div>
+  );
 };
 
-export default MyMap;
+export default MapExample;
