@@ -1,7 +1,12 @@
 import MyMap from "./components/map-components";
+import { MapProvider } from "./context/useContext";
 
 const App = () => {
-  return <MyMap />;
+  return (
+    <MapProvider>
+      <MyMap />
+    </MapProvider>
+  );
 };
 
 export default App;

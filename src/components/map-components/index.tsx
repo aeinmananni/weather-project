@@ -1,8 +1,11 @@
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import LocationComponent from "../location-component";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useRef, useState } from "react";
-import { Map, LatLngTuple, LeafletEvent } from "leaflet";
+import { useEffect, useRef } from "react";
+import { Map, LeafletEvent } from "leaflet";
+import { useMapContext } from "../../context/useContext";
+import LocationMarker from "../location-marker";
+
 // import L from "leaflet";
 
 // L.Icon.Default.mergeOptions({
@@ -11,15 +14,35 @@ import { Map, LatLngTuple, LeafletEvent } from "leaflet";
 //   shadowUrl: import("leaflet/dist/images/marker-shadow.png"),
 // });
 const MapExample = () => {
-  const [location, setLocation] = useState<LatLngTuple>([35.6892, 51.389]);
-  const [zoom, setZoom] = useState<number>(13);
+  const { location, setLocation, zoom, setZoom, cityName, setCityName } =
+    useMapContext();
+
   const mapRef = useRef<Map>(null);
 
   useEffect(() => {
     if (mapRef.current) {
-      mapRef.current.setView(location, zoom); // تنظیم مرکز جدید و زوم نقشه
+      mapRef.current.setView(location, zoom);
     }
-  }, [location]);
+  }, [location, cityName]);
+
+  const handelerGetNameCity = async (lat: number, lon: number) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`
+      );
+      const data = await response.json();
+      setCityName(
+        data.address.city ||
+          data.address.town ||
+          data.address.village ||
+          "نامشخص"
+      );
+    } catch (error) {
+      console.error("Error fetching city name:", error);
+    }
+  };
+
+  console.log(cityName);
   return (
     <div className="relative">
       <MapContainer
@@ -34,14 +57,16 @@ const MapExample = () => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
         />
-        <Marker position={location}>
+        <Marker o position={location}>
           <Popup>موقعیت تهران</Popup>
         </Marker>
+        <LocationMarker handelerGetNameCity={handelerGetNameCity} />
       </MapContainer>
       <LocationComponent
         className="right-0"
         onChange={(e) => {
           setLocation([e.lat, e.lon]);
+          handelerGetNameCity(e.lat, e.lon);
           setZoom(27);
         }}
       />
